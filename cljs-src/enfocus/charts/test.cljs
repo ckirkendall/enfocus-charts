@@ -7,7 +7,7 @@
 (def pie-data [{:value 30 :label "time"}
                {:value 30 :label "pizza"}
                {:value 25 :label "freinds"}
-               {:value 15 :label "country man"}
+               {:value 20 :label "country man"}
                {:value 10 :label "fore fathers"}
                {:value 10 :label "nice guys"}
                {:value 5  :label "dudes"}])
@@ -17,18 +17,17 @@
                   :on-value-click #(js/alert (str (:label %) ": " (:value %)))})
 
 (def line-data [{:label "Series1"
-                 :values [10 12 90 40 50]}
+                 :values [30 12 95 40 50 30 35]}
                 {:label "Series2"
-                 :values [20 60 30 90 15]}
-                {:label "Series3"
-                 :values [15 80 40 10 5]}])
+                 :values [20 50 40 70 25 35 45]}])
   
 (def line-options {:tick-size 3
                    :scale-min 0
-                   :scale-max 100
+                   ;:scale-max 100
                    :y-scale-title "Temperature"
                    :x-scale-title "Month"
-                   :categories ["Jan" "Feb" "Mar" "Apr" "May"]}) 
+                   :series-colors ["#cfcfcf" "#9f9fff"]
+                   :categories ["Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul"]}) 
 
 (em/defaction draw-charts []
   "#pchart-div" (charts/pie-chart pie-data pie-options)

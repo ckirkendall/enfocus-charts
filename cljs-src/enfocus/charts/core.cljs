@@ -8,6 +8,8 @@
 
 (def defaults
   {:general {:font "Arial"
+             :fill? true
+             :fill-opacity 0.5
              :font-size 12
              :font-color "#3f3f3f"
              :padding 10
@@ -33,6 +35,11 @@
    :line {:chart-type :line
           :width 500
           :height 400
+          :bezier-curve? true
+          :value-dot? true
+          :dot-radius 3
+          :stroke-width 2
+          :dot-stroke-color "#fff"
           :y-scale-title nil
           :x-scale-title nil
           :show-grid-lines? true
