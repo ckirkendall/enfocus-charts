@@ -37,6 +37,7 @@
           :x-scale-title nil
           :show-grid-lines? true
           :grid-color "#afafaf"
+          :tick-size 3
           :scale-title-font-size 15
           :scale-title-font-color "#3f3f3f"
           :series-colors ["#F7464A" "#46BFBD" "#FDB45C" "#949FB1" "#4D5360"
