@@ -61,6 +61,7 @@
      :y-labels labels
      :graph-min graph-min
      :graph-max graph-max
+     :graph-range graph-range
      :step-height step-height}))
 
 
@@ -73,13 +74,13 @@
          y-label-width   :y-label-width
          font            :label-font
          fill            :label-fill
-         group           :y-label-group} calcs 
+         group           :y-label-group
+         xtmp            :x-offset} calcs 
         {num-steps  :y-num-steps
          step-value :y-step-value 
          labels     :y-labels
          min        :graph-min
          step-height :step-height} scale
-        xtmp (+ y-title-padding y-label-width)
         ytmp scale-height
         label-widths (utils/get-label-sizes labels font-size)
         pts (map (fn [w c]
@@ -110,7 +111,8 @@
          y-title     :y-scale-title
          x-title     :x-scale-title
          s-min       :scale-min
-         s-max       :scale-max}  opts         
+         s-max       :scale-max
+         categories  :categories}  opts         
         pwidth (- width (* padding 2))
         pheight (- height (* padding 2))
         cat-sizes (utils/get-label-sizes cats fnt-sz fnt-fam)
@@ -141,10 +143,22 @@
         main-group (.createGroup ctx)
         x-label-group (.createGroup ctx main-group)
         y-label-group (.createGroup ctx main-group)
+        series-group (.createGroup ctx main-group)
         scale (calculate-scales ctx series label-height scale-height opts)
+        graph-min (:graph-min scale)
+        graph-range (:graph-range scale)
+        x-offset (+ y-title-padding y-label-width)
+        x-pts (map #(+ x-offset (* x-label-space %)) (range (count categories)))
+        scale-factor (/ scale-height graph-range)
+        base-coords (map (fn [{vals :values}]
+                           (let [y-pts (map #(- scale-height
+                                                (* scale-factor
+                                                   (- % graph-min))) vals)]
+                             (map (fn [x y] [x y]) x-pts y-pts))) series)  
         calcs {:main-group main-group
                :x-label-group x-label-group
                :y-label-group y-label-group
+               :series-group series-group
                :pwidth pwidth
                :pheight pheight
                :label-height label-height
@@ -161,9 +175,11 @@
                :x-label-space x-label-space
                :x-label-rotate? rotate?
                :x-label-area-height x-label-area-height
+               :x-offset x-offset
                :label-font label-font
                :label-fill label-fill
-               :scale scale}]
+               :scale scale
+               :base-coords base-coords}]
     (ef/log-debug (pr-str calcs))
     calcs))
         
@@ -236,45 +252,38 @@
 
 
 (defn draw-series [ctx series calcs opts]
-  (let [{categories   :categories
-         colors       :series-colors
-         stroke-width :stroke-width
-         fill?        :fill?
-         opacity      :fill-opacity
-         value-dot?   :value-dot?
-         dot-radius   :dot-radius
+  (let [{categories       :categories
+         colors           :series-colors
+         stroke-width     :stroke-width
+         fill?            :fill?
+         opacity          :fill-opacity
+         value-dot?       :value-dot?
+         dot-radius       :dot-radius
          dot-stroke-color :dot-stroke-color
-         bezier-curve? :bezier-curve?} opts
-        {height     :scale-height
-         width      :scale-width
-         scale      :scale
-         xstep      :x-label-space
-         y-title-padding :y-title-padding
-         y-label-width :y-label-width
-         group      :main-group} calcs
-        {min  :graph-min
-         max  :graph-max} scale
-        qxstep (/ xstep 4)
-        graph-range (- max min)
-        x-offset (+ y-title-padding y-label-width)
-        scale-factor (/ height graph-range)
-        x-pts (map #(+ x-offset (* xstep %)) (range (count categories)))]
-    (ef/log-debug (pr-str series colors graph-range))
+         bezier-curve?    :bezier-curve?} opts
+        {height           :scale-height
+         width            :scale-width
+         scale            :scale
+         xstep            :x-label-space
+         y-title-padding  :y-title-padding
+         y-label-width    :y-label-width
+         group            :series-group
+         x-offset         :x-offset
+         base-coords      :base-coords} calcs]
+    (ef/log-debug (pr-str series colors))
     (doall
-     (map (fn [s c]
+     (map (fn [s c b-coords]
             (let [path (graphics/Path.)
-                  values (:values s)
+                  [x y] (first b-coords)
                   stroke (graphics/Stroke. stroke-width c)
                   dstroke (graphics/Stroke. stroke-width dot-stroke-color)
-                  y-pts (map #(- height (* scale-factor (- % min))) values)
-                  base-coords (map (fn [x y] [x y]) x-pts y-pts)
                   coords (if bezier-curve?
-                           (create-bezier-coords base-coords xstep)
-                           (flatten base-coords))
+                           (create-bezier-coords b-coords xstep)
+                           (flatten b-coords))
                   fill (graphics/SolidFill. c  opacity)
                   pts (into-array coords)]
               (ef/log-debug (pr-str "coords:" coords))
-              (.moveTo path (first x-pts) (first y-pts))
+              (.moveTo path x y)
               (if bezier-curve?
                 (.apply (.-curveTo path) path pts)
                 (.apply (.-lineTo path) path pts))
@@ -284,7 +293,7 @@
                 (let [f-path (graphics/Path.)]
                   (ef/log-debug fill)
                   (.moveTo f-path x-offset height)
-                  (.lineTo f-path (first x-pts) (first y-pts))
+                  (.lineTo f-path x y)
                   (if bezier-curve?
                     (.apply (.-curveTo f-path) f-path pts)
                     (.apply (.-lineTo f-path) f-path pts))
@@ -292,10 +301,11 @@
                   (.close f-path)
                   (.drawPath ctx f-path nil fill group)))
               (when value-dot?
-                (doseq [[x y] base-coords]
+                (doseq [[x y] b-coords]
                   (.drawCircle ctx x y dot-radius dstroke fill group)))))
           series
-          colors))))
+          colors
+          base-coords))))
          
 
 (defn line-chart [node series opts]
@@ -330,6 +340,7 @@
          pwidth              :pwidth
          pheight             :pheight
          main-group          :main-group
+         series-group        :series-group
          x-label-group       :x-label-group
          x-label-space       :x-label-space
          scale-width         :scale-width
@@ -355,5 +366,6 @@
     (.drawPath ctx x-axis stroke nil main-group)
     (.setTransformation x-label-group (- xtmp (/ x-label-space 2)) (+ ytmp 3) 0 0 0)
     (.setTransformation main-group padding padding 0 0 0)
+    
     (.render ctx)))
     

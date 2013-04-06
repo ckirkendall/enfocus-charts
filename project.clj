@@ -11,8 +11,8 @@
    [{:builds nil,
      :source-paths ["cljs-src"],
      :compiler
-     {:output-dir "resources/public/",
-      :output-to "resources/public/cljs/enfocus-charts.js",
+     {:output-dir "resources/cljs",
+      :output-to "resources/js/enfocus-charts.js",
       :optimizations :whitespace,
       :pretty-print true}}]})
 
