@@ -6,6 +6,7 @@
             [enfocus.effects :as effects]
             [goog.fx :as fx]
             [goog.graphics :as graphics]
+            [goog.graphics.ext :as ext]
             [goog.fx.Animation.EventType :as aet]))
 
 
@@ -23,8 +24,7 @@
                      v-stroke (graphics/Stroke. % (.getColor v-old-stroke))]
                  (.setStroke s-elem s-stroke)
                  (.setStroke v-elem v-stroke))
-        tooltip (when (:tooltip? opts)
-                  (tt/create-hidden-tooltip ctx opts (:main-group calcs)))
+        tooltip @(:tooltip calcs)
         [x y] (:coords data)]
     (events/listen v-elem "mouseover"
                    (fn []
@@ -184,8 +184,9 @@
          stroke?      :stroke?
          stroke-width :stroke-width
          fill?        :fill?
-         colors :series-colors
-         opacity      :fill-opacity}  opts         
+         colors       :series-colors
+         opacity      :fill-opacity
+         tooltip?     :tooltip?}  opts         
         pwidth (- width (* padding 2))
         pheight (- height (* padding 2))
         cat-sizes (utils/get-label-sizes cats fnt-sz fnt-fam)
@@ -219,8 +220,12 @@
         scale (calculate-scales ctx series label-height scale-height opts)
         graph-min (:graph-min scale)
         graph-range (:graph-range scale)
-        x-offset (+ y-title-padding y-label-width)       
+        x-offset (+ y-title-padding y-label-width)
+        tooltip (when tooltip?
+                  (delay (tt/create-hidden-tooltip ctx opts main-group
+                                         scale-width scale-height)))
         calcs {:main-group main-group
+               :tooltip tooltip
                :x-label-group x-label-group
                :y-label-group y-label-group
                :pwidth pwidth

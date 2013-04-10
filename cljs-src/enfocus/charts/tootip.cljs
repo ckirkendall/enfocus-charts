@@ -26,6 +26,12 @@
       (.curveTo 0 0 0 0 radius 0)
       (.close))))
 
+(defn calculate-xy [x y w h bw bh]
+  (let [nx (if (or (> (+ x w) bw)
+                   (< (- y h) 0)) (- x w) x)
+        ny (if (< (- y h) 0) y (- y h))]
+    [nx ny]))
+
 (defn update-text-elements [calcs data opts]
   (let [{padding    :tooltip-padding
          fnt-sz     :tooltip-font-size
@@ -87,9 +93,9 @@
      :label-element (empty-text)
      :category-element (empty-text)}));;TODO 
         
-    
 
-(defn create-hidden-tooltip [ctx opts group]
+
+(defn create-hidden-tooltip [ctx opts group w-bounds h-bounds]
   (let [calcs (do-calculations ctx opts group)
         data-atm  (atom {})
         sz-atm (atom 0)
@@ -103,8 +109,9 @@
                  (fn []
                    (swap! sz-atm #(update-text-elements calcs data opts))
                    data)))
-        (let [[w h] @sz-atm]
-          (.setTransformation t-group x (- y h) 0 0 0))
+        (let [[w h] @sz-atm
+              [nx ny] (calculate-xy x y w h w-bounds h-bounds)]
+          (.setTransformation t-group nx ny 0 0 0))
         (swap! show-atm (fn [] true)))
       (hide [elem]
         (swap! show-atm (fn [] false))
