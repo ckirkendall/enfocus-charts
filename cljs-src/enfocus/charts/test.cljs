@@ -27,7 +27,8 @@
                    :y-scale-title "Temperature"
                    :x-scale-title "Month"
                    :series-colors ["#cfcfcf" "#9f9fff"]
-                   :categories ["Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul"]}) 
+                   :categories ["Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul"]
+                   :on-value-click #(js/alert (str (:series-label %) ": " (:value %)))})
 
 (em/defaction draw-charts []
   "#pchart-div" (charts/pie-chart pie-data pie-options)

@@ -13,11 +13,11 @@
 
 
 (defn get-label-sizes
-  ([labels font-size] (get-label-sizes labels "arial" font-size))
-  ([labels font font-size]
+  ([labels font-size] (get-label-sizes labels font-size "arial"))
+  ([labels font-size font]
   (let [func (fn [txt div]
                (set! (.-innerHTML div) txt)
-               (style/getStyle div "font-family" font)
+               (style/setStyle div "font-family" font)
                (style/setStyle div "font-size" font-size)
                (style/getSize div)) 
         div (dom/createDom "div" hide-style)

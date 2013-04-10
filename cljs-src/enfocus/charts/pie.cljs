@@ -19,12 +19,10 @@
   (when (:on-value-click opts)
     (events/listen  elem "click" (partial (:on-value-click opts) data)))
   (when (:slice-pop opts)
-    (events/listen elem "mouseover"
-                   (fn []
-                       (.setPath elem (build-segment-path (assoc data :selected true) opts))))
-    (events/listen elem "mouseout"
-                   (fn []
-                     (.setPath elem (build-segment-path (assoc data :selected false) opts))))))
+    (let [drawf #(.setPath elem
+                           (build-segment-path (assoc data :selected %) opts))] 
+      (events/listen elem "mouseover" #(drawf true))
+      (events/listen elem "mouseout" #(drawf false)))))
 
 
 (defn- draw-label [ctx data opts]

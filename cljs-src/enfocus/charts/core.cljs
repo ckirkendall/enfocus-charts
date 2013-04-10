@@ -21,7 +21,16 @@
              :on-value-click nil
              :animation? true
              :animation-duration 500
-             :on-animation-complete nil}
+             :on-animation-complete nil
+             :tooltip? true
+             :tooltip-padding 5
+             :tooltip-font-size 10
+             :tooltip-font-color "#3f3f3f"
+             :tooltip-background-color "#fff"
+             :tooltip-opacity 0.7
+             :tooltip-stroke-width 1
+             :tooltip-stoke-color "#cfcfcf"
+             :tooltip-label-color "#6f6f6f"}
    :pie {:chart-type :pie
          :padding nil
          :show-labels? false
@@ -43,7 +52,7 @@
           :y-scale-title nil
           :x-scale-title nil
           :show-grid-lines? true
-          :grid-color "#afafaf"
+          :grid-color "#efefef"
           :tick-size 3
           :scale-title-font-size 15
           :scale-title-font-color "#3f3f3f"
@@ -65,4 +74,3 @@
 (defn line-chart [data options]
   (let [config (merge-options options :line)]
     (fn [node] (line/line-chart node data config))))
-
