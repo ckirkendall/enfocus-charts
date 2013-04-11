@@ -12,19 +12,6 @@
   (show [this x y data])
   (hide [this]))
 
-(defn curve-rec-path [width height radius]
-  (let [path (graphics/Path.)]
-    (doto path
-      (.moveTo radius 0)
-      (.lineTo (- width radius) 0)
-      (.curveTo width 0 width 0 width radius)
-      (.lineTo width (- height radius))
-      (.curveTo width height width height (- width radius) height)
-      (.lineTo radius height)
-      (.curveTo 0 height 0 height 0 (- height radius))
-      (.lineTo 0 radius)
-      (.curveTo 0 0 0 0 radius 0)
-      (.close))))
 
 (defn calculate-xy [x y w h bw bh]
   (let [nx (if (or (> (+ x w) bw)
@@ -32,40 +19,32 @@
         ny (if (< (- y h) 0) y (- y h))]
     [nx ny]))
 
+(defn get-tootip-content [data opts]
+  (let [content (:tooltip-content opts)]
+    (map (fn [[s & keys]]
+           (apply format s (map #(% data) keys))) content)))
+
+
 (defn update-text-elements [calcs data opts]
   (let [{padding    :tooltip-padding
          fnt-sz     :tooltip-font-size
          font       :font} opts
         {group      :group
-         label-elem :label-element
-         cat-elem   :category-element
-         val-elem   :value-element
-         rec-elem   :rec-element } calcs
-        {val        :value
-         label      :series-label
-         category   :category} data
-        label-text (str label ": ")
-        [label-size] (utils/get-label-sizes [(str label-text ".")] fnt-sz font)
-        [l1-w l1-h] (if category
-                      (let [[sz] (utils/get-label-sizes [category] fnt-sz font)]
-                        [(.-width sz) (.-height sz)])
-                      [0 0])
-        [l2-w l2-h] (let [[sz] (utils/get-label-sizes [val] fnt-sz font)]
-                      [(+ (.-width sz) (.-width label-size)) (.-height sz)])
-        width (+ (* padding 2) (max l1-w l2-w))
-        height (+ (* padding 2) l1-h l2-h)
-        rec (curve-rec-path width height 5)]
-    (ef/log-debug (pr-str label val category width height))
+         lines      :lines
+         rec-elem   :rec-element} calcs
+        content (get-tootip-content data opts)
+        sizes (utils/get-label-sizes content fnt-sz font)
+        line-height (.-height (first sizes))
+        height (+ (* padding 2) (reduce #(+ %1 (.-height %2)) 0 sizes))
+        width (+ (* padding 2) (reduce #(+ %1 (.-width %2)) 0 sizes))
+        rec (utils/curve-rec-path width height 5)]
+    (ef/log-debug (first sizes))
+    (ef/log-debug (pr-str content width height))
     (.setPath rec-elem rec)
     (.setSize group width height)
-    (.setTransformation cat-elem padding padding 0 0 0)
-    (.setText cat-elem category)
-    (.setTransformation label-elem padding (+ padding l1-h) 0 0 0)
-    (.setText label-elem label-text)
-    (.setTransformation val-elem
-                       (+ padding (.-width label-size))
-                       (+ padding l1-h) 0 0 0)
-    (.setText val-elem val)
+    (doall (map (fn [l s r]
+           (.setTransformation l padding (+ padding (* r line-height)) 0 0 0)
+           (.setText l s)) lines content (range (count content))))
     [width height]))
     
    
@@ -78,7 +57,8 @@
          font        :font
          s-width     :tooltip-stroke-width
          s-color     :tooltip-stoke-color
-         opacity     :tooltip-opacity} opts
+         opacity     :tooltip-opacity
+         tooltip-content :tooltip-content} opts
         font (graphics/Font. font-size font) 
         fill (graphics/SolidFill. bg-color opacity)
         font-fill (graphics/SolidFill. font-color 1)
@@ -89,9 +69,7 @@
                                font nil font-fill tooltip-group)]
     {:rec-element (.drawPath ctx rec-path stroke fill tooltip-group)
      :group tooltip-group
-     :value-element (empty-text)
-     :label-element (empty-text)
-     :category-element (empty-text)}));;TODO 
+     :lines (map #(empty-text) tooltip-content)}))
         
 
 
@@ -119,5 +97,5 @@
                          (when (not @show-atm)
                            (ef/log-debug "hiding tooltip")
                            (.setTransformation t-group -100 -100 0 0 0)))
-                       200)))))
+                       (:tooltip-hide-delay opts))))))
       

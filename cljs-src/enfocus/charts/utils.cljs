@@ -1,7 +1,8 @@
 (ns enfocus.charts.utils
   (:require [enfocus.core :as ef]
             [goog.dom :as dom]
-            [goog.style :as style]))
+            [goog.style :as style]
+            [goog.graphics :as gg]))
 
 
 (def hide-style (.-strobj {"style" "visibility: hidden; position: absolute; top: -100px; left: 0px;"}))
@@ -30,3 +31,25 @@
   ([] (test-label-widths 10))
   ([font-size]
      (get-label-sizes ["test","testing"] font-size)))
+
+
+(defn empty-path-elem [ctx stroke fill group]
+  (let [path (gg/Path.)]
+    (.moveTo path 0 0)
+    (.drawPath ctx path stroke fill group)))
+
+
+
+(defn curve-rec-path [width height radius]
+  (let [path (gg/Path.)]
+    (doto path
+      (.moveTo radius 0)
+      (.lineTo (- width radius) 0)
+      (.curveTo width 0 width 0 width radius)
+      (.lineTo width (- height radius))
+      (.curveTo width height width height (- width radius) height)
+      (.lineTo radius height)
+      (.curveTo 0 height 0 height 0 (- height radius))
+      (.lineTo 0 radius)
+      (.curveTo 0 0 0 0 radius 0)
+      (.close)))) 

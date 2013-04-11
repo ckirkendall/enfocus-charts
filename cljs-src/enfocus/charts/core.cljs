@@ -30,7 +30,8 @@
              :tooltip-opacity 0.7
              :tooltip-stroke-width 1
              :tooltip-stoke-color "#cfcfcf"
-             :tooltip-label-color "#6f6f6f"}
+             :tooltip-hide-delay  1000
+             :tooltip-content [["%s" :value]]}
    :pie {:chart-type :pie
          :padding nil
          :show-labels? false
@@ -40,7 +41,8 @@
          :stroke-color "#fff"
          :slice-pop true
          :series-colors ["#F7464A" "#46BFBD" "#FDB45C" "#949FB1" "#4D5360"
-                         "#7D4F6D" "#9D9B7F" "#D97041" "#584A5E"]}
+                         "#7D4F6D" "#9D9B7F" "#D97041" "#584A5E"]
+          :tooltip-content [["%s: %s" :label :value]]}
    :line {:chart-type :line
           :width 500
           :height 400
@@ -50,14 +52,16 @@
           :stroke-width 2
           :dot-stroke-color "#fff"
           :y-scale-title nil
-          :x-scale-title nil
+          :x-scale-title nil 
           :show-grid-lines? true
           :grid-color "#efefef"
           :tick-size 3
           :scale-title-font-size 15
           :scale-title-font-color "#3f3f3f"
           :series-colors ["#F7464A" "#46BFBD" "#FDB45C" "#949FB1" "#4D5360"
-                         "#7D4F6D" "#9D9B7F" "#D97041" "#584A5E"]}})
+                          "#7D4F6D" "#9D9B7F" "#D97041" "#584A5E"]
+          :tooltip-content [["%s" :category]
+                            ["%s: %s" :series-label :value]]}})
 
 (defn get-defaults* [type]
     (merge (defaults :general) (defaults type)))

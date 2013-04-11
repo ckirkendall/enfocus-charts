@@ -5,7 +5,7 @@
             [goog.events :as events]
             [enfocus.effects :as effects]
             [goog.fx :as fx]
-            [goog.graphics :as graphics]
+            [goog.graphics :as gg]
             [goog.graphics.ext :as ext]
             [goog.fx.Animation.EventType :as aet]))
 
@@ -19,9 +19,9 @@
   (when (:on-value-click opts)
     (events/listen v-elem "click" (partial (:on-value-click opts) data)))
   (let [sfunc #(let [s-old-stroke (.getStroke s-elem)
-                     s-stroke (graphics/Stroke. % (.getColor s-old-stroke))
+                     s-stroke (gg/Stroke. % (.getColor s-old-stroke))
                      v-old-stroke (.getStroke v-elem)
-                     v-stroke (graphics/Stroke. % (.getColor v-old-stroke))]
+                     v-stroke (gg/Stroke. % (.getColor v-old-stroke))]
                  (.setStroke s-elem s-stroke)
                  (.setStroke v-elem v-stroke))
         tooltip @(:tooltip calcs)
@@ -101,11 +101,11 @@
          group       :main-group} calcs
         num-steps (count (:categories opts))]
     (doseq [step (range num-steps)]
-      (let [path (graphics/Path.)
+      (let [path (gg/Path.)
             y1 (+ height tick-size)
             y2 0
             x (+ xtmp (* step-width step))
-            stroke (graphics/Stroke. 1 (:grid-color opts))]
+            stroke (gg/Stroke. 1 (:grid-color opts))]
         (ef/log-debug (pr-str "x-grid:" y1 y2 x))
         (doto path
           (.moveTo x y1)
@@ -123,11 +123,11 @@
         {num-steps   :y-num-steps
          step-height :step-height} scale]
     (doseq [step (range num-steps)]
-      (let [path (graphics/Path.)
+      (let [path (gg/Path.)
             x1 (- xtmp tick-size)
             x2 (+ xtmp scale-width)
             y (- height (* step-height step))
-            stroke (graphics/Stroke. 1 (:grid-color opts))]
+            stroke (gg/Stroke. 1 (:grid-color opts))]
         (doto path
           (.moveTo x1 y)
           (.lineTo x2 y))
@@ -212,8 +212,8 @@
                               (+ (* sin-cos-45 max-x-label-width) label-height)
                               label-height)
         scale-height (- pheight (+ x-title-padding x-label-area-height))
-        label-font (graphics/Font. fnt-sz fnt-fam)
-        label-fill (graphics/SolidFill. fnt-color 1)
+        label-font (gg/Font. fnt-sz fnt-fam)
+        label-fill (gg/SolidFill. fnt-color 1)
         main-group (.createGroup ctx)
         x-label-group (.createGroup ctx main-group)
         y-label-group (.createGroup ctx main-group)
@@ -297,8 +297,8 @@
         x2 (+ x1 width)
         y1 (- height (+ x-title-padding x-label-area-height))
         oset (/ t-height 2)
-        fill (graphics/SolidFill. font-color 1)
-        font (graphics/Font. font-size font)]
+        fill (gg/SolidFill. font-color 1)
+        font (gg/Font. font-size font)]
     (ef/log-debug (pr-str y1 height))
     (if y-title
       (.drawTextOnLine ctx y-title oset y1 oset 0 "center" font nil fill group))
@@ -357,7 +357,7 @@
                               :category c}) x-vals y-vals))) series)]
     (doall
      (map (fn [s c data e1 e2]
-            (let [path (graphics/Path.)
+            (let [path (gg/Path.)
                   {[x y] :coords} (first data)
                   b-coords (map :coords data)
                   coords (if bezier-curve?
@@ -371,7 +371,7 @@
               (.setPath e1 path)  
               (when fill?
                 (ef/log-debug "fill series")
-                (let [f-path (graphics/Path.)]
+                (let [f-path (gg/Path.)]
                   (.moveTo f-path x-offset height)
                   (.lineTo f-path x y)
                   (if bezier-curve?
@@ -386,11 +386,11 @@
           series-elements
           fill-elements))
     (when (and value-dot? (= anim 1))
-      (let [dstroke (graphics/Stroke. stroke-width dot-stroke-color)]
+      (let [dstroke (gg/Stroke. stroke-width dot-stroke-color)]
       (doall
        (map #(doseq [{[x y] :coords :as d} %1]
                (ef/log-debug (pr-str d))
-               (let [fill (graphics/SolidFill. %3 1)
+               (let [fill (gg/SolidFill. %3 1)
                      elem (.drawCircle ctx x y dot-radius dstroke fill group)]
                  (handle-events ctx d %2 elem calcs opts)))
             data
@@ -430,7 +430,7 @@
          s-step         :scale-step
          tick-size      :tick-size
          opacity          :fill-opacity} opts
-        ctx (graphics/createGraphics width height)
+        ctx (gg/createGraphics width height)
         calcs (do-calculations ctx series opts)
         {y-title-padding     :y-title-padding
          y-label-width       :y-label-width
@@ -445,30 +445,26 @@
          scale-height        :scale-height} calcs
         xtmp (+ y-title-padding y-label-width)
         ytmp scale-height
-        stroke (graphics/Stroke. 1 grid-color)
-        x-axis (graphics/Path.)
-        y-axis (graphics/Path.)
+        stroke (gg/Stroke. 1 grid-color)
+        x-axis (gg/Path.)
+        y-axis (gg/Path.)
         ease-fn (or (:ease-fn opts) effects/linear)
         _ (draw-chart-setup ctx calcs opts)
-        series-group (.createGroup ctx main-group)
+        s-group (.createGroup ctx main-group)
         anim (when animation?
                (fx/Animation. (array 0) (array 1) anim-duration ease-fn))
-        series-elements (map #(let [path (graphics/Path.)
-                                    stroke (graphics/Stroke. stroke-width %2)]
-                                (.moveTo path 0 0)
-                                (.drawPath ctx path stroke nil series-group))
-                             series
-                             colors)
-        fill-elements (map #(let [path (graphics/Path.)
-                                  fill (graphics/SolidFill. %2 opacity)]
-                              (.moveTo path 0 0)
-                              (.drawPath ctx path nil fill series-group))
-                           series
-                           colors)
+        s-stroke #(gg/Stroke. stroke-width %)
+        s-fill #(gg/SolidFill. % opacity)
+        series-elems (map #(utils/empty-path-elem ctx (s-stroke %2) nil s-group)
+                          series
+                          colors)
+        fill-elems (map #(utils/empty-path-elem ctx nil (s-fill %2) s-group)
+                        series
+                        colors)
         calcs (assoc calcs
-                :series-elements series-elements
-                :fill-elements fill-elements
-                :series-group series-group)
+                :series-elements series-elems
+                :fill-elements fill-elems
+                :series-group s-group)
         draw-func #(draw-series ctx series calcs opts %)]
     (if anim
       (do
