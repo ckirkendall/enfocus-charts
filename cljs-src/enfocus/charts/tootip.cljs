@@ -8,15 +8,21 @@
             [goog.fx.Animation.EventType :as aet]))
 
 
+(def point-offset 3)
+
 (defprotocol Tooltip
   (show [this x y data])
   (hide [this]))
 
 
 (defn calculate-xy [x y w h bw bh]
-  (let [nx (if (or (> (+ x w) bw)
-                   (< (- y h) 0)) (- x w) x)
-        ny (if (< (- y h) 0) y (- y h))]
+  (let [nx (if (or (> (+ point-offset x w) bw)
+                   (< (- y h point-offset) 0))
+             (- x w point-offset)
+             (+ x point-offset)) 
+        ny (if (< (- y h) 0)
+             (+ y point-offset)
+             (- y h point-offset))]
     [nx ny]))
 
 (defn get-tootip-content [data opts]
@@ -52,7 +58,6 @@
   (let [{padding     :tooltip-padding
          bg-color    :tooltip-background-color
          font-color  :tooltip-font-color
-         label-color :tooltip-label-color
          font-size   :tooltip-font-size
          font        :font
          s-width     :tooltip-stroke-width

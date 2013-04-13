@@ -37,8 +37,8 @@
   (when (:tooltip opts)
     (let [tooltip (:tooltip opts)
           f1 #(let [[x y] (get-position (.getGraphics elem)
-                                        (+ (.-clientX %) 3)
-                                        (- (.-clientY %) 3))]
+                                        (.-clientX %)
+                                        (.-clientY %))]
                 (tt/show tooltip x y data))]
       (events/listen elem "mousemove" f1)
       (events/listen elem "mouseout" #(tt/hide tooltip)))))    
