@@ -42,7 +42,20 @@
          :slice-pop true
          :series-colors ["#F7464A" "#46BFBD" "#FDB45C" "#949FB1" "#4D5360"
                          "#7D4F6D" "#9D9B7F" "#D97041" "#584A5E"]
-          :tooltip-content [["%s: %s" :label :value]]}
+         :tooltip-content [["%s: %s" :label :value]]}
+   :bar {:chart-type :bar
+         :width 500
+         :height 400
+         :stroke-width 2
+         :show-grid-lines? true
+         :grid-color "#efefef"
+         :tick-size 3
+         :scale-title-font-size 15
+         :scale-title-font-color "#3f3f3f"
+         :series-colors ["#F7464A" "#46BFBD" "#FDB45C" "#949FB1" "#4D5360"
+                         "#7D4F6D" "#9D9B7F" "#D97041" "#584A5E"]
+         :tooltip-content [["%s" :category]
+                           ["%s: %s" :series-label :value]]} 
    :line {:chart-type :line
           :width 500
           :height 400
@@ -51,7 +64,7 @@
           :dot-radius 3
           :stroke-width 2
           :dot-stroke-color "#fff"
-          :y-scale-title nil
+          :y-scale-title nil 
           :x-scale-title nil 
           :show-grid-lines? true
           :grid-color "#efefef"
@@ -77,4 +90,8 @@
 
 (defn line-chart [data options]
   (let [config (merge-options options :line)]
-    (fn [node] (line/line-chart node data config))))
+    (fn [node] (line/series-chart node data config))))
+
+(defn bar-chart [data options]
+  (let [config (merge-options options :bar)]
+    (fn [node] (line/series-chart node data config))))

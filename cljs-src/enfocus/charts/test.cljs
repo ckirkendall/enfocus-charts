@@ -23,7 +23,7 @@
   
 (def line-options {:tick-size 3
                    :scale-min 0
-                   ;:scale-max 100
+                   ;:scale-max 100 
                    :y-scale-title "Temperature"
                    :x-scale-title "Month"
                    :series-colors ["#cfcfcf" "#9f9fff"]
@@ -32,6 +32,7 @@
 
 (em/defaction draw-charts []
   "#pchart-div" (charts/pie-chart pie-data pie-options)
-  "#lchart-div" (charts/line-chart line-data line-options))
+  "#lchart-div" (charts/line-chart line-data line-options)
+  "#bchart-div" (charts/bar-chart line-data line-options))
 
 (set! (.-onload js/window) draw-charts)
