@@ -52,4 +52,12 @@
       (.curveTo 0 height 0 height 0 (- height radius))
       (.lineTo 0 radius)
       (.curveTo 0 0 0 0 radius 0)
-      (.close)))) 
+      (.close))))
+
+
+(defn get-position [ctx x y]
+  (let [elem (.getContentElement ctx)
+        pos (style/getClientPosition elem)
+        nx (- x (.-x pos))
+        ny (- y (.-y pos))]
+    [nx ny]))

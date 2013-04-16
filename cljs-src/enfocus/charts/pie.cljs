@@ -14,14 +14,6 @@
 (def hide-offset 100)
 
 
-(defn get-position [ctx x y]
-  (let [elem (.getContentElement ctx)
-        pos (style/getClientPosition elem)
-        nx (- x (.-x pos))
-        ny (- y (.-y pos))]
-    [nx ny]))
-
-
 (defn- handle-events [data elem opts]
   (when (:on-value-mouseover opts)
     (events/listen elem "mouseover" (partial (:on-value-mouseover opts) data)))
@@ -36,9 +28,9 @@
       (events/listen elem "mouseout" #(drawf false))))
   (when (:tooltip opts)
     (let [tooltip (:tooltip opts)
-          f1 #(let [[x y] (get-position (.getGraphics elem)
-                                        (.-clientX %)
-                                        (.-clientY %))]
+          f1 #(let [[x y] (cu/get-position (.getGraphics elem)
+                                              (.-clientX %)
+                                              (.-clientY %))]
                 (tt/show tooltip x y data))]
       (events/listen elem "mousemove" f1)
       (events/listen elem "mouseout" #(tt/hide tooltip)))))    

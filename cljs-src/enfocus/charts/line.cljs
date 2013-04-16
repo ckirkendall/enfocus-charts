@@ -23,14 +23,14 @@
                      s-stroke (gg/Stroke. % (.getColor s-old-stroke))
                      v-old-stroke (.getStroke v-elem)
                      v-stroke (gg/Stroke. % (.getColor v-old-stroke))]
-                 (.setStroke s-elem s-stroke)
+                 (when s-elem (.setStroke s-elem s-stroke))
                  (.setStroke v-elem v-stroke))
         tooltip @(:tooltip calcs)
         [x y] (:coords data)]
     (events/listen v-elem "mouseover"
-                   (fn []
-                     (when tooltip (tt/show tooltip x y data))
-                     (sfunc (* (:stroke-width opts) 2))))
+                   (fn [event]
+                       (when tooltip (tt/show tooltip x y data))
+                       (sfunc (* (:stroke-width opts) 2))))
     (events/listen v-elem "mouseout"
                    (fn []
                      (when tooltip (tt/hide tooltip))
@@ -438,7 +438,10 @@
                         (.setPath f-elem path)))) vals s-elems f-elems)))
           data
           series-elements
-          (if fill? fill-elements series-elements)))))
+          (if fill? fill-elements series-elements)))
+    (doall (map #(handle-events ctx %1 nil %2 calcs opts)
+                (flatten data)
+                (flatten fill-elements)))))
  
 
 (defn draw-line-series [ctx series calcs opts anim]
