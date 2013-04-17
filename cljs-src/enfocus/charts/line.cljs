@@ -26,7 +26,10 @@
                  (when s-elem (.setStroke s-elem s-stroke))
                  (.setStroke v-elem v-stroke))
         tooltip @(:tooltip calcs)
-        [x y] (:coords data)]
+        [tmp-x tmp-y] (:coords data)
+        [x y] (if (is-bar opts)
+                [(+ tmp-x (/ (:bar-width calcs) 2)) tmp-y]
+                [tmp-x tmp-y])]
     (events/listen v-elem "mouseover"
                    (fn [event]
                        (when tooltip (tt/show tooltip x y data))
@@ -284,7 +287,8 @@
         tooltip (when tooltip?
                   (delay (tt/create-hidden-tooltip ctx opts main-group
                                          scale-width scale-height)))
-        s-elems (build-empty-series-elements ctx series series-group opts) 
+        s-elems (build-empty-series-elements ctx series series-group opts)
+        bar-width (when (is-bar opts) (/ x-label-space (inc (count series))))
         calcs {:main-group main-group
                :tooltip tooltip
                :x-label-group x-label-group
@@ -311,7 +315,8 @@
                :x-offset x-offset
                :label-font label-font
                :label-fill label-fill
-               :scale scale}]
+               :scale scale
+               :bar-width bar-width}]
     calcs))
         
 
@@ -396,11 +401,11 @@
          group            :series-group
          x-offset         :x-offset
          base-coords      :base-coords
-         s-elements       :series-elements} calcs
+         s-elements       :series-elements
+         bar-width        :bar-width} calcs
         {graph-range      :graph-range
          graph-min        :graph-min} scale
         [series-elements fill-elements] s-elements
-        bar-width (/ xstep (inc (count series)))
         scale-factor (/ height graph-range)
         n-steps (range (count categories))
         x-vals (map #(do [(+ x-offset (* xstep %2)) %1]) categories n-steps)

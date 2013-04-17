@@ -55,6 +55,7 @@
       (.close))))
 
 
+
 (defn get-position [ctx x y]
   (let [elem (.getContentElement ctx)
         pos (style/getClientPosition elem)
