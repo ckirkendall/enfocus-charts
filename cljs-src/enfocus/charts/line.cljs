@@ -18,24 +18,19 @@
 
 (defn- handle-events [ctx data s-elem v-elem calcs opts]
   (handle-base-events data v-elem opts)
-  (let [sfunc #(when-not (is-bar opts)
-                 (let [s-old-stroke (.getStroke s-elem)
-                       s-stroke (gg/Stroke. % (.getColor s-old-stroke))
-                       v-old-stroke (.getStroke v-elem)
-                       v-stroke (gg/Stroke. % (.getColor v-old-stroke))]
-                   (.setStroke s-elem s-stroke)
-                   (.setStroke v-elem v-stroke)))
+  (let [sfunc #(do (utils/update-stroke s-elem %)
+                   (utils/update-stroke v-elem %))
         tooltip @(:tooltip calcs)
         [tmp-x tmp-y] (:coords data)
         [x y] (if (is-bar opts)
                 [(+ tmp-x (/ (:bar-width calcs) 2)) tmp-y]
                 [tmp-x tmp-y])]
-    (add-events v-elem [:mouseover (fn [event]
-                                        (when tooltip (tt/show tooltip x y data))
-                                        (sfunc (* (:stroke-width opts) 2)))
-                           :mouseout (fn []
-                                       (when tooltip (tt/hide tooltip))
-                                       (sfunc (:stroke-width opts)))])))
+    (add-events v-elem [:mouseover (fn []
+                                     (when tooltip (tt/show tooltip x y data))
+                                     (sfunc (* (:stroke-width opts) 2)))
+                        :mouseout (fn []
+                                    (when tooltip (tt/hide tooltip))
+                                    (sfunc (:stroke-width opts)))])))
 
 
 (defn get-min-max [series]

@@ -62,3 +62,9 @@
         nx (- x (.-x pos))
         ny (- y (.-y pos))]
     [nx ny]))
+
+
+(defn update-stroke [elem width]
+  (when-let [old-stroke (.getStroke elem)]
+    (let [new-stroke (gg/Stroke. width (.getColor old-stroke))]
+      (.setStroke elem new-stroke))))
