@@ -18,19 +18,17 @@
 
 (defn- handle-events [ctx data s-elem v-elem calcs opts]
   (handle-base-events data v-elem opts)
-  (let [sfunc #(do (utils/update-stroke s-elem %)
+  (let [sfunc #(do (when s-elem (utils/update-stroke s-elem %))
                    (utils/update-stroke v-elem %))
         tooltip @(:tooltip calcs)
         [tmp-x tmp-y] (:coords data)
         [x y] (if (is-bar opts)
                 [(+ tmp-x (/ (:bar-width calcs) 2)) tmp-y]
                 [tmp-x tmp-y])]
-    (add-events v-elem [:mouseover (fn []
-                                     (when tooltip (tt/show tooltip x y data))
-                                     (sfunc (* (:stroke-width opts) 2)))
-                        :mouseout (fn []
-                                    (when tooltip (tt/hide tooltip))
-                                    (sfunc (:stroke-width opts)))])))
+    (add-events v-elem [:mouseover #(do (when tooltip (tt/show tooltip x y data))
+                                        (sfunc (* (:stroke-width opts) 2)))
+                        :mouseout #(do (when tooltip (tt/hide tooltip))
+                                       (sfunc (:stroke-width opts)))])))
 
 
 (defn get-min-max [series]
@@ -341,6 +339,36 @@
                 (- x hstep) y
                 x y]) (range 1 n))))
 
+
+(defn points-for-stack
+  ([height scale anim x-vals x-trans stack]
+     (let [prev  (repeat (count (:values (first stack))) 0)]
+       (points-for-stack height scale anim x-vals x-trans stack prev)))
+  ([height scale anim x-vals x-trans stack prev]
+     (let [{scale-factor :scale-factor
+            graph-range  :graph-range
+            graph-min    :graph-min} scale]
+       (if (empty? stack) nil
+           (let [{vals :values label :label} (first stack)
+                 nvals (map #(+ %1 %2) vals prev)
+                 y-vals (map #(do [(- height
+                                      (* anim scale-factor
+                                         (- %1 graph-min)))
+                                   (- height
+                                      (* anim scale-factor
+                                         (- %2 graph-min)))
+                                   %1]) nvals prev)]
+             (ef/log-debug (pr-str "POINTS: " y-vals x-vals prev nvals))
+             (conj (points-for-stack height scale anim x-vals x-trans
+                                           (rest stack) nvals)
+                   (map (fn [[x c] [yt yb v]]
+                          {:coords [(+ x x-trans) yt]
+                           :bottom-coords [(+ x x-trans) yb] 
+                           :series-label label
+                           :value v
+                           :category c}) x-vals y-vals)))))))
+              
+
 (defn draw-bar-series [ctx series calcs opts anim]
   (let [{categories       :categories
          colors           :series-colors
@@ -359,9 +387,9 @@
          s-elements       :series-elements
          bar-width        :bar-width} calcs
         {graph-range      :graph-range
-         graph-min        :graph-min} scale
+         graph-min        :graph-min
+         scale-factor     :scale-factor} scale
         [series-elements fill-elements] s-elements
-        scale-factor (/ height graph-range)
         n-steps (range (count categories))
         x-vals (map #(do [(+ x-offset (* xstep %2)) %1]) categories n-steps)
         x-trans (map #(+ (/ bar-width 2) (* bar-width %)) (range (count series)))
@@ -375,7 +403,10 @@
                              {:coords [(+ x xt) y]
                               :series-label label
                               :value v
-                              :category c}) x-vals y-vals))) series x-trans)]
+                              :category c}) x-vals y-vals))) series x-trans)
+        data (map #(first (points-for-stack height scale anim x-vals %2 [%1]))
+                  series x-trans)]
+    (ef/log-debug (pr-str "DATA:" data))
     (doall
      (map (fn [vals s-elems f-elems]
             (doall
@@ -423,9 +454,9 @@
          base-coords      :base-coords
          s-elements       :series-elements} calcs
         {graph-range      :graph-range
-         graph-min        :graph-min} scale
+         graph-min        :graph-min
+         scale-factor     :scale-factor} scale
         [series-elements fill-elements] s-elements
-        scale-factor (/ height graph-range)
         nxsteps (range (count categories))  
         x-vals (map #(do [(+ x-offset (* xstep %2)) %1]) categories nxsteps)
         data (map (fn [{vals :values label :label}]

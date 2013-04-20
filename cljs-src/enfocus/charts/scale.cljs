@@ -37,4 +37,5 @@
      :graph-min graph-min
      :graph-max graph-max
      :graph-range graph-range
-     :step-height step-height}))
+     :step-height step-height
+     :scale-factor (/ scale-height graph-range)}))
