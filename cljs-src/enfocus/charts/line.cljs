@@ -393,17 +393,6 @@
         n-steps (range (count categories))
         x-vals (map #(do [(+ x-offset (* xstep %2)) %1]) categories n-steps)
         x-trans (map #(+ (/ bar-width 2) (* bar-width %)) (range (count series)))
-        data (map (fn [{vals :values label :label} xt]
-                    (ef/log-debug (pr-str "data-vals:" vals))
-                    (let [y-vals (map #(do [(- height
-                                                (* anim scale-factor
-                                                   (- % graph-min)))
-                                             %]) vals)]
-                      (map (fn [[x c] [y v]]
-                             {:coords [(+ x xt) y]
-                              :series-label label
-                              :value v
-                              :category c}) x-vals y-vals))) series x-trans)
         data (map #(first (points-for-stack height scale anim x-vals %2 [%1]))
                   series x-trans)]
     (ef/log-debug (pr-str "DATA:" data))
@@ -459,16 +448,8 @@
         [series-elements fill-elements] s-elements
         nxsteps (range (count categories))  
         x-vals (map #(do [(+ x-offset (* xstep %2)) %1]) categories nxsteps)
-        data (map (fn [{vals :values label :label}]
-                    (let [y-vals (map #(do [(- height
-                                                (* anim scale-factor
-                                                   (- % graph-min)))
-                                             %]) vals)]
-                      (map (fn [[x c] [y v]]
-                             {:coords [x y]
-                              :series-label label
-                              :value v
-                              :category c}) x-vals y-vals))) series)]
+        data (map #(first (points-for-stack height scale anim x-vals 0 [%1]))
+                  series)]
     (doall
      (map (fn [data e1 e2]
             (let [path (gg/Path.)
