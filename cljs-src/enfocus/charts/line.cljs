@@ -1,8 +1,10 @@
 (ns enfocus.charts.line
+  (:use [enfocus.charts.events :only (handle-base-events add-events)])
   (:require [enfocus.core :as ef]
             [enfocus.charts.utils :as utils]
             [enfocus.charts.scale :as scale]
             [enfocus.charts.tooltip :as tt]
+            [enfocus.charts.events :as ce]
             [goog.events :as events]
             [enfocus.effects :as effects]
             [goog.fx :as fx]
@@ -13,33 +15,27 @@
 (defn is-bar [opts]
   (= (:chart-type opts) :bar))
 
-(defn handle-events [ctx data s-elem v-elem calcs opts]
-  (when (:on-value-mouseover opts)
-    (events/listen v-elem "mouseover" (partial (:on-value-mouseover opts) data)))
-  (when (:on-value-mouseout opts)
-    (events/listen v-elem "mouseout" (partial (:on-value-mouseout opts) data)))
-  (when (:on-value-click opts)
-    (events/listen v-elem "click" (partial (:on-value-click opts) data)))
-  (let [sfunc #(let [s-old-stroke (.getStroke s-elem)
-                     s-stroke (gg/Stroke. % (.getColor s-old-stroke))
-                     v-old-stroke (.getStroke v-elem)
-                     v-stroke (gg/Stroke. % (.getColor v-old-stroke))]
-                 (when s-elem (.setStroke s-elem s-stroke))
-                 (.setStroke v-elem v-stroke))
+
+(defn- handle-events [ctx data s-elem v-elem calcs opts]
+  (handle-base-events data v-elem opts)
+  (let [sfunc #(when-not (is-bar opts)
+                 (let [s-old-stroke (.getStroke s-elem)
+                       s-stroke (gg/Stroke. % (.getColor s-old-stroke))
+                       v-old-stroke (.getStroke v-elem)
+                       v-stroke (gg/Stroke. % (.getColor v-old-stroke))]
+                   (.setStroke s-elem s-stroke)
+                   (.setStroke v-elem v-stroke)))
         tooltip @(:tooltip calcs)
         [tmp-x tmp-y] (:coords data)
         [x y] (if (is-bar opts)
                 [(+ tmp-x (/ (:bar-width calcs) 2)) tmp-y]
                 [tmp-x tmp-y])]
-    (events/listen v-elem "mouseover"
-                   (fn [event]
-                       (when tooltip (tt/show tooltip x y data))
-                       (sfunc (* (:stroke-width opts) 2))))
-    (events/listen v-elem "mouseout"
-                   (fn []
-                     (when tooltip (tt/hide tooltip))
-                     (sfunc (:stroke-width opts))))))
-
+    (add-events v-elem [:mouseover (fn [event]
+                                        (when tooltip (tt/show tooltip x y data))
+                                        (sfunc (* (:stroke-width opts) 2)))
+                           :mouseout (fn []
+                                       (when tooltip (tt/hide tooltip))
+                                       (sfunc (:stroke-width opts)))])))
 
 
 (defn get-min-max [series]

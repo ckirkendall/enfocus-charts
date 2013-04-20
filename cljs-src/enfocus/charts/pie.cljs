@@ -1,9 +1,11 @@
 (ns enfocus.charts.pie
+  (:use [enfocus.charts.events :only (handle-base-events add-events)])
   (:require [enfocus.core :as ef]
             [enfocus.charts.utils :as cu]
             [enfocus.charts.tooltip :as tt]
-            [goog.style :as style]
+            [enfocus.charts.events :as events]
             [goog.events :as events]
+            [goog.style :as style]
             [enfocus.effects :as effects]
             [goog.fx :as fx]
             [goog.graphics :as graphics]
@@ -15,25 +17,20 @@
 
 
 (defn- handle-events [data elem opts]
-  (when (:on-value-mouseover opts)
-    (events/listen elem "mouseover" (partial (:on-value-mouseover opts) data)))
-  (when (:on-value-mouseout opts)
-    (events/listen elem "mouseout" (partial (:on-value-mouseout opts) data)))
-  (when (:on-value-click opts)
-    (events/listen  elem "click" (partial (:on-value-click opts) data)))
+  (handle-base-events data elem opts)
   (when (:slice-pop opts)
     (let [drawf #(.setPath elem
                            (build-segment-path (assoc data :selected %) opts))] 
-      (events/listen elem "mouseover" #(drawf true))
-      (events/listen elem "mouseout" #(drawf false))))
+      (add-events elem [:mouseover #(drawf true)
+                        :mouseout #(drawf false)])))
   (when (:tooltip opts)
     (let [tooltip (:tooltip opts)
           f1 #(let [[x y] (cu/get-position (.getGraphics elem)
                                               (.-clientX %)
                                               (.-clientY %))]
                 (tt/show tooltip x y data))]
-      (events/listen elem "mousemove" f1)
-      (events/listen elem "mouseout" #(tt/hide tooltip)))))    
+      (add-events elem [:mousemove f1
+                        :mouseout #(tt/hide tooltip)]))))
 
 
 
