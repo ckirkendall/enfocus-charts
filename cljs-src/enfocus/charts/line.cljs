@@ -361,7 +361,7 @@
                                       (* anim scale-factor
                                          (- %2 graph-min)))
                                    %1]) nvals prev)]
-             (ef/log-debug (pr-str "POINTS: " y-vals x-vals prev nvals))
+             ;(ef/log-debug (pr-str "POINTS: " y-vals x-vals prev nvals))
              (conj (points-for-stack height scale anim x-vals x-trans
                                            (rest stack) nvals)
                    (map (fn [[x c] [yt yb v]]
