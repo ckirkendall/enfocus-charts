@@ -233,7 +233,8 @@
         y-label-group (.createGroup ctx main-group)
         grid-group (.createGroup ctx main-group)
         series-group (.createGroup ctx main-group)
-        scale (scale/calculate-scales ctx series label-height scale-height opts)
+        stacks (vals (group-by #(if (:stack %) (:stack %) (gensym)) series)) 
+        scale (scale/calculate-scales ctx stacks label-height scale-height opts)
         graph-min (:graph-min scale)
         graph-range (:graph-range scale)
         x-offset (+ y-title-padding y-label-width)
@@ -241,7 +242,7 @@
                   (delay (tt/create-hidden-tooltip ctx opts main-group
                                          scale-width scale-height)))
         s-elems (build-empty-series-elements ctx series series-group opts)
-        bar-width (when (is-bar opts) (/ x-label-space (inc (count series))))
+        bar-width (when (is-bar opts) (/ x-label-space (inc (count stacks))))
         calcs {:main-group main-group
                :tooltip tooltip
                :x-label-group x-label-group
@@ -269,7 +270,8 @@
                :label-font label-font
                :label-fill label-fill
                :scale scale
-               :bar-width bar-width}]
+               :bar-width bar-width
+               :stacks stacks}]
     calcs))
         
 
@@ -385,35 +387,37 @@
          x-offset         :x-offset
          base-coords      :base-coords
          s-elements       :series-elements
-         bar-width        :bar-width} calcs
+         bar-width        :bar-width
+         stacks           :stacks} calcs
         {graph-range      :graph-range
          graph-min        :graph-min
          scale-factor     :scale-factor} scale
         [series-elements fill-elements] s-elements
         n-steps (range (count categories))
         x-vals (map #(do [(+ x-offset (* xstep %2)) %1]) categories n-steps)
-        x-trans (map #(+ (/ bar-width 2) (* bar-width %)) (range (count series)))
-        data (map #(first (points-for-stack height scale anim x-vals %2 [%1]))
-                  series x-trans)]
+        x-trans (map #(+ (/ bar-width 2) (* bar-width %)) (range (count stacks)))
+        data (mapcat #(points-for-stack height scale anim x-vals %2 %1)
+                     stacks x-trans)]
     (ef/log-debug (pr-str "DATA:" data))
     (doall
      (map (fn [vals s-elems f-elems]
             (doall
-             (map (fn [{[x y] :coords :as val} s-elem f-elem]
+             (map (fn [{[x y] :coords
+                        [bx by] :bottom-coords :as val} s-elem f-elem]
                     (let [path (gg/Path.)]
                       (doto path
-                        (.moveTo x height)
+                        (.moveTo bx by)
                         (.lineTo x y
                                  (+ x bar-width) y
-                                 (+ x bar-width) height))
+                                 (+ bx bar-width) by))
                       (.setPath s-elem path))
                     (if fill?
                       (let [path (gg/Path.)]
                         (doto path
-                          (.moveTo x height)
+                          (.moveTo bx by)
                           (.lineTo x y
                                    (+ x bar-width) y
-                                   (+ x bar-width) height)
+                                   (+ bx bar-width) by)
                           (.close))
                         (.setPath f-elem path)))) vals s-elems f-elems)))
           data
@@ -448,8 +452,8 @@
         [series-elements fill-elements] s-elements
         nxsteps (range (count categories))  
         x-vals (map #(do [(+ x-offset (* xstep %2)) %1]) categories nxsteps)
-        data (map #(first (points-for-stack height scale anim x-vals 0 [%1]))
-                  series)]
+        data (mapcat #(points-for-stack height scale anim x-vals 0 [%1])
+                     series)]
     (doall
      (map (fn [data e1 e2]
             (let [path (gg/Path.)
@@ -549,7 +553,7 @@
     (let [x-label-trans (if (is-bar opts) xtmp (- xtmp (/ x-label-space 2)))]
       (.setTransformation x-label-group x-label-trans (+ ytmp 3) 0 0 0))
     (.setTransformation main-group padding padding 0 0 0)
-    (.render ctx)
+    (.render ctx node)
     (when anim (.play anim))))
     
 

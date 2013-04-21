@@ -1,7 +1,18 @@
 (ns enfocus.charts.scale)
 
 
-  (defn calc-step [num-steps step-value graph-range min max]
+
+(defn get-stack-sums [stack]
+  (apply map (fn [& vals] (apply + vals)) (map :values stack)))
+
+(defn max-stack [stack]
+  (apply max (get-stack-sums stack)))
+
+(defn min-stack [stack]
+  (apply min (get-stack-sums stack)))
+
+
+(defn calc-step [num-steps step-value graph-range min max]
   (cond
    (or (< num-steps min)) (let [nstep (/ step-value 2) 
                                 nsteps (.round js/Math (/ graph-range nstep))]
@@ -10,13 +21,15 @@
                                 nsteps (.round js/Math (/ graph-range nstep))]
                             (calc-step nsteps nstep  graph-range min max))
    ;we increment num-steps to include max val
-   :else [(inc num-steps) step-value])) 
+   :else [(inc num-steps) step-value]))
 
-(defn calculate-scales [ctx series label-height scale-height opts]
+
+
+(defn calculate-scales [ctx stacks label-height scale-height opts]
   (let [{s-max   :scale-max
          s-min   :scale-min} opts
-        max (or s-max (apply max (map #(apply max (:values %)) series)))
-        min (or s-min (apply min (map #(apply min (:values %)) series)))
+        max (or s-max (apply max (map #(max-stack %) stacks)))
+        min (or s-min (apply min (map #(min-stack %) stacks)))
         max-steps (.floor js/Math (/ scale-height (* label-height 0.66)))
         min-steps (.floor js/Math (* (/ scale-height label-height) 0.5))
         g-range (- max min)

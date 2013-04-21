@@ -30,9 +30,23 @@
                    :categories ["Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul"]
                    :on-value-click #(js/alert (str (:series-label %) ": " (:value %)))})
 
+
+(def stack-data [{:label "Series1"
+                  :values [30 12 95 40 50 30 35]
+                  :stack :new}
+                {:label "Series2"
+                 :values [20 50 40 70 25 35 45]
+                 :stack :new}
+                {:label "Series3"
+                 :values [5 55 30 70 55 45 25]
+                 :stack :loner}])
+
+(def stack-options (dissoc line-options :series-colors))
+
 (em/defaction draw-charts []
   "#pchart-div" (charts/pie-chart pie-data pie-options)
   "#lchart-div" (charts/line-chart line-data line-options)
-  "#bchart-div" (charts/bar-chart line-data line-options))
+  "#bchart-div" (charts/bar-chart line-data line-options)
+  "#sbchart-div" (charts/bar-chart stack-data stack-options))
 
 (set! (.-onload js/window) draw-charts)
