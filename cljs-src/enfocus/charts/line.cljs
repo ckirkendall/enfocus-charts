@@ -234,7 +234,8 @@
         grid-group (.createGroup ctx main-group)
         series-group (.createGroup ctx main-group)
         stacks (vals (group-by #(if (:stack %) (:stack %) (gensym)) series)) 
-        scale (scale/calculate-scales ctx stacks label-height scale-height opts)
+        scale (scale/calc-scale ctx stacks label-height scale-height opts)
+        _ (ef/log-debug (pr-str scale))
         graph-min (:graph-min scale)
         graph-range (:graph-range scale)
         x-offset (+ y-title-padding y-label-width)
@@ -398,7 +399,6 @@
         x-trans (map #(+ (/ bar-width 2) (* bar-width %)) (range (count stacks)))
         data (mapcat #(points-for-stack height scale anim x-vals %2 %1)
                      stacks x-trans)]
-    (ef/log-debug (pr-str "DATA:" data))
     (doall
      (map (fn [vals s-elems f-elems]
             (doall
@@ -469,7 +469,6 @@
                 (.apply (.-lineTo path) path pts))
               (.setPath e1 path)  
               (when fill?
-                (ef/log-debug "fill series")
                 (let [f-path (gg/Path.)]
                   (.moveTo f-path x-offset height)
                   (.lineTo f-path x y)
@@ -486,7 +485,6 @@
       (let [dstroke (gg/Stroke. stroke-width dot-stroke-color)]
       (doall
        (map #(doseq [{[x y] :coords :as d} %1]
-               (ef/log-debug (pr-str d))
                (let [fill (gg/SolidFill. %3 1)
                      elem (.drawCircle ctx x y dot-radius dstroke fill group)]
                  (handle-events ctx d %2 elem calcs opts)))
