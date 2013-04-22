@@ -8,7 +8,6 @@ target
 .metadata
 .project
 .classpath
-*.js
 /resources/public/**cljs
 /resources/public/domina
 /resources/public/clojure
