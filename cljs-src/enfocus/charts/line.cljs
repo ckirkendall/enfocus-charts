@@ -362,15 +362,16 @@
                                    (- (+ height (* scale-factor graph-min))
                                       (* anim scale-factor %2))
                                          ;(- %2 pos-offset)))
-                                   %3]) nvals prev vals)]
+                                   %1 %3]) nvals prev vals)]
              (ef/log-debug (pr-str "POINTS: " y-vals x-vals prev nvals))
              (conj (points-for-stack height scale anim x-vals x-trans
                                            (rest stack) nvals)
-                   (map (fn [[x c] [yt yb v]]
+                   (map (fn [[x c] [yt yb tv v]]
                           {:coords [(+ x x-trans) yt]
                            :bottom-coords [(+ x x-trans) yb] 
                            :series-label label
                            :value v
+                           :total-value tv
                            :category c}) x-vals y-vals)))))))
               
 
