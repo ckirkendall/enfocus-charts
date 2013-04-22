@@ -337,9 +337,10 @@
         hstep (/ xstep 2)
         qstep (/ xstep 4)]
     (mapcat #(let [[px py] (get vcoords (dec %))
-                   [x y] (get vcoords %)]
-               [(- x hstep) py
-                (- x hstep) y
+                   [x y] (get vcoords %)
+                   nx (if (< px x) (- x hstep) (+ x hstep))]
+               [nx py
+                nx y
                 x y]) (range 1 n))))
 
 
@@ -446,24 +447,31 @@
          group            :series-group
          x-offset         :x-offset
          base-coords      :base-coords
-         s-elements       :series-elements} calcs
+         s-elements       :series-elements
+         stacks           :stacks} calcs
         {graph-range      :graph-range
          graph-min        :graph-min
          scale-factor     :scale-factor} scale
         [series-elements fill-elements] s-elements
         nxsteps (range (count categories))  
         x-vals (map #(do [(+ x-offset (* xstep %2)) %1]) categories nxsteps)
-        data (mapcat #(points-for-stack height scale anim x-vals 0 [%1])
-                     series)]
+        data (mapcat #(points-for-stack height scale anim x-vals 0 %1)
+                     stacks)]
     (doall
      (map (fn [data e1 e2]
             (let [path (gg/Path.)
                   {[x y] :coords} (first data)
-                  b-coords (map :coords data)
+                  t-coords (map :coords data)
+                  b-coords (reverse (map :bottom-coords data))
+                  [bx by] (first b-coords)
                   coords (if bezier-curve?
-                           (create-bezier-coords b-coords xstep)
-                           (flatten b-coords))
-                  pts (into-array coords)]
+                           (create-bezier-coords t-coords xstep)
+                           (flatten t-coords))
+                  bottom-coords (if bezier-curve?
+                                  (create-bezier-coords b-coords xstep)
+                                  (flatten b-coords))
+                  pts (into-array coords)
+                  bpts (into-array bottom-coords)]
               (.moveTo path x y)
               (if bezier-curve?
                 (.apply (.-curveTo path) path pts)
@@ -471,12 +479,17 @@
               (.setPath e1 path)  
               (when fill?
                 (let [f-path (gg/Path.)]
-                  (.moveTo f-path x-offset height)
-                  (.lineTo f-path x y)
+                  (.moveTo f-path x y)
                   (if bezier-curve?
-                    (.apply (.-curveTo f-path) f-path pts)
-                    (.apply (.-lineTo f-path) f-path pts))
-                  (.lineTo f-path (+ width x-offset) height)
+                    (do
+                      (.apply (.-curveTo f-path) f-path pts)
+                      (.lineTo f-path bx by)
+                      (.apply (.-curveTo f-path) f-path bpts))
+                    (do
+                      (.apply (.-lineTo f-path) f-path pts)
+                      (.lineTo f-path bx by)
+                      (.apply (.-lineTo f-path) f-path bpts)))
+                  ;(.lineTo f-path (+ width x-offset) height)
                   (.close f-path)
                   (.setPath e2 f-path)))))
           data

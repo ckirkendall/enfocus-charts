@@ -30,8 +30,16 @@
                    :categories ["Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul"]
                    :on-value-click #(js/alert (str (:series-label %) ": " (:value %)))})
 
+(def stack-l-data [{:label "Series1"
+                  :values [20 12 95 40 50 30 35]
+                  :stack :new}
+                {:label "Series2"
+                 :values [10 50 40 70 25 35 45]
+                 :stack :new}])
 
-(def stack-data [{:label "Series1"
+(def stack-l-options (assoc line-options :scale-min 0 :bezier-curve? false))
+                
+(def stack-b-data [{:label "Series1"
                   :values [20 12 95 40 50 30 35]
                   :stack :new}
                 {:label "Series2"
@@ -46,7 +54,8 @@
 (em/defaction draw-charts []
   "#pchart-div" (charts/pie-chart pie-data pie-options)
   "#lchart-div" (charts/line-chart line-data line-options)
+  "#slchart-div" (charts/line-chart stack-l-data stack-l-options)
   "#bchart-div" (charts/bar-chart line-data line-options)
-  "#sbchart-div" (charts/bar-chart stack-data stack-options))
+  "#sbchart-div" (charts/bar-chart stack-b-data stack-options))
 
 (set! (.-onload js/window) draw-charts)
