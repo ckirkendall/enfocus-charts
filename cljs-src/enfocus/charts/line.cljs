@@ -354,14 +354,15 @@
        (if (empty? stack) nil
            (let [{vals :values label :label} (first stack)
                  nvals (map #(+ %1 %2) vals prev)
-                 y-vals (map #(do [(- height
-                                      (* anim scale-factor
-                                         (- %1 graph-min)))
-                                   (- height
-                                      (* anim scale-factor
-                                         (- %2 graph-min)))
-                                   %1]) nvals prev)]
-             ;(ef/log-debug (pr-str "POINTS: " y-vals x-vals prev nvals))
+                 pos-offset (when (neg? graph-min) 0 graph-min) 
+                 y-vals (map #(do [(- (+ height (* scale-factor graph-min))
+                                      (* anim scale-factor %1))
+                                         ;(- %1 pos-offset)))
+                                   (- (+ height (* scale-factor graph-min))
+                                      (* anim scale-factor %2))
+                                         ;(- %2 pos-offset)))
+                                   %3]) nvals prev vals)]
+             (ef/log-debug (pr-str "POINTS: " y-vals x-vals prev nvals))
              (conj (points-for-stack height scale anim x-vals x-trans
                                            (rest stack) nvals)
                    (map (fn [[x c] [yt yb v]]

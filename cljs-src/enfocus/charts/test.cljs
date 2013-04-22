@@ -19,10 +19,10 @@
 (def line-data [{:label "Series1"
                  :values [30 12 95 40 50 30 35]}
                 {:label "Series2"
-                 :values [20 50 40 70 25 35 45]}])
+                 :values [-10 50 40 70 25 35 45]}])
   
 (def line-options {:tick-size 3
-                   :scale-min 0
+                   :scale-min -20
                    ;:scale-max 100 
                    :y-scale-title "Temperature"
                    :x-scale-title "Month"
@@ -32,16 +32,16 @@
 
 
 (def stack-data [{:label "Series1"
-                  :values [30 12 95 40 50 30 35]
+                  :values [20 12 95 40 50 30 35]
                   :stack :new}
                 {:label "Series2"
-                 :values [20 50 40 70 25 35 45]
+                 :values [10 50 40 70 25 35 45]
                  :stack :new}
                 {:label "Series3"
                  :values [5 55 30 70 55 45 25]
                  :stack :loner}])
 
-(def stack-options (dissoc line-options :series-colors))
+(def stack-options (dissoc (dissoc line-options :series-colors) :scale-min))
 
 (em/defaction draw-charts []
   "#pchart-div" (charts/pie-chart pie-data pie-options)

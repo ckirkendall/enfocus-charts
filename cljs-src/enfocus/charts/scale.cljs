@@ -22,8 +22,8 @@
         x-tmp (.ceil js/Math (- (.log js/Math tick-size-tmp) 1))
         pow-x (.pow js/Math 10 x-tmp)
         step-value (* (.ceil js/Math (/ tick-size-tmp pow-x)) pow-x)
-        graph-min (* step-value (.round js/Math (/ min step-value)))
-        graph-max (* step-value (.round js/Math (+ 1 (/ max step-value))))
+        graph-min (* step-value (.floor js/Math (/ min step-value)))
+        graph-max (* step-value (.ceil js/Math (+ 1 (/ max step-value))))
         graph-range (- graph-max graph-min)
         num-steps (/ graph-range step-value)
         labels (map #(str (+ graph-min (* step-value %))) (range num-steps))
@@ -35,5 +35,6 @@
      :graph-max graph-max
      :graph-range graph-range
      :step-height step-height
-     :scale-factor (/ scale-height graph-range)}))
+     ;:scale-factor (/ scale-height graph-range)
+     :scale-factor (/ step-height step-value)}))
 
