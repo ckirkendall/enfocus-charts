@@ -13,6 +13,6 @@
      :compiler
      {:output-dir "resources/cljs",
       :output-to "resources/js/enfocus-charts.js",
-      :optimizations :whitespace,
+      :optimizations :advanced,
       :pretty-print true}}]})
 

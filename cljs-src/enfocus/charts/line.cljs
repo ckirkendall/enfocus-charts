@@ -233,7 +233,7 @@
         y-label-group (.createGroup ctx main-group)
         grid-group (.createGroup ctx main-group)
         series-group (.createGroup ctx main-group)
-        stacks (vals (group-by #(if (:stack %) (:stack %) (gensym)) series)) 
+        stacks (vals (group-by #(if (:stack %) (:stack %) (gensym)) series))
         scale (scale/calc-scale ctx stacks label-height scale-height opts)
         _ (ef/log-debug (pr-str scale))
         graph-min (:graph-min scale)
