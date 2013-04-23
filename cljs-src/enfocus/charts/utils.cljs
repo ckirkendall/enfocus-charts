@@ -2,7 +2,8 @@
   (:require [enfocus.core :as ef]
             [goog.dom :as dom]
             [goog.style :as style]
-            [goog.graphics :as gg]))
+            [goog.graphics :as gg]
+            [goog.userAgent :as ua]))
 
 
 (def hide-style (.-strobj {"style" "visibility: hidden; position: absolute; top: -100px; left: 0px;"}))
@@ -67,3 +68,8 @@
   (when-let [old-stroke (.getStroke elem)]
     (let [new-stroke (gg/Stroke. width (.getColor old-stroke))]
       (.setStroke elem new-stroke))))
+
+(defn create-graphics [width height]
+  (if (and ua/IE (ua/isVersion "9"))
+    (let [ctx (gg/VmlGraphics. width height)] (.createDom ctx) ctx)
+    (let [ctx (gg/SvgGraphics. width height)] (.createDom ctx) ctx)))

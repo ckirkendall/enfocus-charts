@@ -525,7 +525,7 @@
          anim-duration  :animation-duration
          tick-size      :tick-size
          grid-color     :grid-color} opts
-        ctx (gg/createGraphics width height)
+        ctx (utils/create-graphics width height)
         calcs (do-calculations ctx series opts)
         {y-title-padding     :y-title-padding
          y-label-width       :y-label-width
