@@ -65,7 +65,6 @@
             y2 0
             x (+ xtmp (* step-width step))
             stroke (gg/Stroke. 1 (:grid-color opts))]
-        (ef/log-debug (pr-str "x-grid:" y1 y2 x))
         (doto path
           (.moveTo x y1)
           (.lineTo x y2))
@@ -235,7 +234,6 @@
         series-group (.createGroup ctx main-group)
         stacks (vals (group-by #(if (:stack %) (:stack %) (gensym)) series)) 
         scale (scale/calc-scale ctx stacks label-height scale-height opts)
-        _ (ef/log-debug (pr-str scale))
         graph-min (:graph-min scale)
         graph-range (:graph-range scale)
         x-offset (+ y-title-padding y-label-width)
@@ -358,12 +356,9 @@
                  pos-offset (when (neg? graph-min) 0 graph-min) 
                  y-vals (map #(do [(- (+ height (* scale-factor graph-min))
                                       (* anim scale-factor %1))
-                                         ;(- %1 pos-offset)))
                                    (- (+ height (* scale-factor graph-min))
                                       (* anim scale-factor %2))
-                                         ;(- %2 pos-offset)))
                                    %1 %3]) nvals prev vals)]
-             (ef/log-debug (pr-str "POINTS: " y-vals x-vals prev nvals))
              (conj (points-for-stack height scale anim x-vals x-trans
                                            (rest stack) nvals)
                    (map (fn [[x c] [yt yb tv v]]
